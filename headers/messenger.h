@@ -4,16 +4,16 @@
 class Messenger
 {
     private:
-        int color;
-        bool status = true;
+        char *color;
+        bool alive = true;
         int travelTime;
         bool possibleMessage;
     public:
-        void setColor(int);
+        void setColor(char*);
         void setStatus(bool);
         void setTravelTime();
         void setPossibleMessage();
-        int getColor() const;
+        char *getColor();
         bool getStatus() const;
         int getTravelTime() const;
         bool getPossibleMessage() const;
