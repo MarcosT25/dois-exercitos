@@ -5,6 +5,7 @@
 using namespace std;
 #include <string>
 #include <ctime>
+#include <algorithm>
 
 struct action
     {
@@ -62,6 +63,8 @@ int main()
 
     bool endProgram = false;
     int i = 0;
+    string start = "0";
+    string end = "0";
     while (!endProgram)
     {
         currentAction = &actionVec[i];
@@ -81,16 +84,22 @@ int main()
                         (*currentAction).alive = messenger.getStatus();
                         time_t now = time(0) + (*currentAction).timestamp;
                         char* dt = ctime(&now);
+                        string newTime = dt;
+                        newTime.erase(remove(newTime.begin(), newTime.end(), '\n'), newTime.end());
+                        if (start == "0")
+                        {
+                            start = newTime;
+                        }
                         string alive;
                         if ((*currentAction).alive)
                         {
-                            alive = "vivo";
+                            alive = "Durante o trajeto, o mensageiro sobreviveu.";
                         }
                         else 
                         {
-                            alive = "morto";
+                            alive = "Durante o trajeto, o mensageiro morreu.";
                         }
-                        cout << "O exército " << (*currentAction).army << " " << (*currentAction).type << " em " << dt << " um mensageiro " << alive << endl;
+                        cout << "O exército " << (*currentAction).army << " " << (*currentAction).type << " em " << newTime  << " um mensageiro. " << alive << endl;
                         if (messenger.getStatus())
                         {                            
                             newTimestamp = (*currentAction).timestamp + messenger.getTravelTime();
@@ -104,7 +113,12 @@ int main()
                     else 
                     {
                         endProgram = true;
-                        cout << "O exército perdeu pois os mensageiros do exército Vermelho acabaram" << endl;
+                        cout << "O exército perdeu pois os mensageiros do exército Vermelho acabaram." << endl;
+                        time_t now = time(0) + (*currentAction).timestamp;
+                        char* dt = ctime(&now);
+                        string newTime = dt;
+                        newTime.erase(remove(newTime.begin(), newTime.end(), '\n'), newTime.end());
+                        end = newTime;
                     }
                 }
                 if ((*currentAction).army == azul)
@@ -120,16 +134,18 @@ int main()
                         (*currentAction).possibleTime = messenger.getPossibleMessage();
                         time_t now = time(0) + (*currentAction).timestamp;
                         char* dt = ctime(&now);
+                        string newTime = dt;
+                        newTime.erase(remove(newTime.begin(), newTime.end(), '\n'), newTime.end());
                         string alive;
                         if ((*currentAction).alive)
                         {
-                            alive = "vivo";
+                            alive = "Durante o trajeto, o mensageiro sobreviveu.";
                         }
                         else 
                         {
-                            alive = "morto";
+                            alive = "Durante o trajeto, o mensageiro morreu.";
                         }
-                        cout << "O exército " << (*currentAction).army << " " << (*currentAction).type << " em " << dt << " um mensageiro " << alive << endl;
+                        cout << "O exército " << (*currentAction).army << " " << (*currentAction).type << " em " << newTime  << " um mensageiro. " << alive << endl;
                         if (messenger.getStatus())
                         {
                             newTimestamp = (*currentAction).timestamp + messenger.getTravelTime();
@@ -146,7 +162,20 @@ int main()
                     else
                     {
                         endProgram = true;
-                        cout << "O exército perdeu pois os mensageiros do exército Azul acabaram" << endl;
+                        cout << "O exército perdeu pois os mensageiros do exército Azul acabaram." << endl;
+                        time_t now = time(0) + (*currentAction).timestamp;
+                        char* dt = ctime(&now);
+                        string newTime = dt;
+                        newTime.erase(remove(newTime.begin(), newTime.end(), '\n'), newTime.end());
+                        end = newTime;
+                        for (int j = 29; j >= 0; j--) //exclui o horário que o vermelho enviaria o último mensageiro
+                        {
+                            if (actionVec[j].army == vermelho && actionVec[j].type == enviou)
+                            {
+                                actionVec[j].valid = false;
+                                break;
+                            }
+                        }
                     }
                 }
             }
@@ -156,29 +185,40 @@ int main()
                 {
                     time_t now = time(0) + (*currentAction).timestamp;
                     char* dt = ctime(&now);
+                    string newTime = dt;
+                    newTime.erase(remove(newTime.begin(), newTime.end(), '\n'), newTime.end());
                     string alive;
                     if ((*currentAction).alive)
                     {
-                        alive = "vivo";
+                        alive = "vivo.";
                     }
                     else 
                     {
-                        alive = "morto";
+                        alive = "morto.";
                     }
-                    cout << "O exército " << (*currentAction).army << " " << (*currentAction).type << " em " << dt << " um mensageiro " << alive << endl;
+                    cout << "O exército " << (*currentAction).army << " " << (*currentAction).type << " em " << newTime << " um mensageiro " << alive << endl;
                     if ((*currentAction).possibleTime)
                     {
                         redArmy.flareShot();
                         endProgram = true;
-                        cout << "O exército ganhou" << endl;
+                        cout << "O exército Azul confirmou o horário e o exército Vermelho disparou o sinalizador. O exército ganhou." << endl;
+                        end = newTime;
+                        for (int j = 29; j >= 0; j--) //exclui o horário que o vermelho enviaria o último mensageiro
+                        {
+                            if (actionVec[j].army == vermelho && actionVec[j].type == enviou)
+                            {
+                                actionVec[j].valid = false;
+                                break;
+                            }
+                        }
                     }
                     else 
                     {
                         newTimestamp = (*currentAction).timestamp + 1;
                         newAction = {newTimestamp, vermelho, enviou, true, true, true};
                         structInsert(newAction, actionVec);
-                        cout << "O exército vermelho vai reenviar um mensageiro pois o azul não podia no horário combinado" << endl;
-                        for (int j = 29; j >= 0; j--)
+                        cout << "O exército Vermelho vai reenviar um mensageiro pois o Azul não podia no horário combinado." << endl;
+                        for (int j = 29; j >= 0; j--) //exclui o horário que o vermelho enviaria o último mensageiro
                         {
                             if (actionVec[j].army == vermelho && actionVec[j].type == enviou)
                             {
@@ -192,16 +232,18 @@ int main()
                 {   
                     time_t now = time(0) + (*currentAction).timestamp;
                     char* dt = ctime(&now);
+                    string newTime = dt;
+                    newTime.erase(remove(newTime.begin(), newTime.end(), '\n'), newTime.end());
                     string alive;
                     if ((*currentAction).alive)
                     {
-                        alive = "vivo";
+                        alive = "vivo.";
                     }
                     else 
                     {
-                        alive = "morto";
+                        alive = "morto.";
                     }
-                    cout << "O exército " << (*currentAction).army << " " << (*currentAction).type << " em " << dt << " um mensageiro " << alive << endl;
+                    cout << "O exército " << (*currentAction).army << " " << (*currentAction).type << " em " << newTime << " um mensageiro " << alive << endl;
                     newTimestamp = (*currentAction).timestamp + 1;
                     newAction = {newTimestamp, azul, enviou, true, true, true};
                     structInsert(newAction, actionVec);
@@ -210,6 +252,21 @@ int main()
         }
         i++;
     }
+    
+    cout << "O início da troca de mensagens foi em " << start << ". O fim da troca de mensagens foi em " << end << "." << endl;
+    for (int i = 29; i >= 0; i--)
+    {
+        if (actionVec[i].valid)
+        {
+            int hour = (actionVec[i].timestamp - actionVec[0].timestamp) / 3600;
+            int minutes = ((actionVec[i].timestamp - actionVec[0].timestamp) % 3600) / 60;
+            int seconds = (actionVec[i].timestamp - actionVec[0].timestamp) - (3600 * hour) - (60 * minutes);
+            cout << "O tempo total entre a troca de mensagens foi de " << hour << " horas, " << minutes << " minutos e " << seconds << " segundos." << endl;
+            break;
+        }
+    }
+    cout << "O exército Vermelho utilizou " << 5 - redArmy.getMessengerCount() << " mensageiros." << endl;
+    cout << "O exército Azul utilizou " << 10 - blueArmy.getMessengerCount() << " mensageiros." << endl;
 
     return 0;
 }
