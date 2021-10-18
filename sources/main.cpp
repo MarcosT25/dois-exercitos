@@ -217,6 +217,7 @@ int main()
                         newTimestamp = (*currentAction).timestamp + 1;
                         newAction = {newTimestamp, vermelho, enviou, true, true, true};
                         structInsert(newAction, actionVec);
+                        cout << "O exército Vermelho disparou o sinalizador confirmando que recebeu o mensageiro." << endl;
                         cout << "O exército Vermelho vai reenviar um mensageiro pois o Azul não podia no horário combinado." << endl;
                         for (int j = 29; j >= 0; j--) //exclui o horário que o vermelho enviaria o último mensageiro
                         {
