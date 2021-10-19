@@ -14,7 +14,7 @@ struct action
         char *type;
         bool possibleTime = true;
         bool alive = true;
-        bool valid = false;
+        bool valid = false; //campo valid serve para filtrar structs com lixo de memória no vetor
     };
 
 void structInsert(action actionStruct, action *actionVec) 
@@ -33,19 +33,18 @@ void structInsert(action actionStruct, action *actionVec)
                 break;
             }
         }
-        
     }
 }
 
 int main()
 {
     srand(time(NULL));
-    Army redArmy;
+    Army redArmy; //instancia o exército vermelho
     char vermelho[9] = "Vermelho";
     redArmy.setColor(vermelho);
     redArmy.setMessengerCount(5);
     redArmy.setWaitTime(12601);
-    Army blueArmy;
+    Army blueArmy; //instancia o exército azul
     char azul[5] = "Azul";
     blueArmy.setColor(azul);
     blueArmy.setMessengerCount(10);
@@ -68,12 +67,12 @@ int main()
     while (!endProgram)
     {
         currentAction = &actionVec[i];
-        if ((*currentAction).valid)
+        if ((*currentAction).valid) //confere se não é lixo de memória
         {
             if ((*currentAction).type == enviou)
             {
                 Messenger messenger;
-                if ((*currentAction).army == vermelho)
+                if ((*currentAction).army == vermelho) //exercito vermelho enviando um mensageiro
                 {
                     if(redArmy.getMessengerCount() > 0)
                     {
@@ -83,8 +82,8 @@ int main()
                         messenger.castleCapture();
                         (*currentAction).alive = messenger.getStatus();
                         time_t now = time(0) + (*currentAction).timestamp;
-                        char* dt = ctime(&now);
-                        string newTime = dt;
+                        char* dt = ctime(&now); //por padrão a função ctime adiciona um \n
+                        string newTime = dt; //retiraremos o \n passando dt para uma string e utilizando a função abaixo
                         newTime.erase(remove(newTime.begin(), newTime.end(), '\n'), newTime.end());
                         if (start == "0")
                         {
@@ -100,13 +99,13 @@ int main()
                             alive = "Durante o trajeto, o mensageiro morreu.";
                         }
                         cout << "O exército " << (*currentAction).army << " " << (*currentAction).type << " em " << newTime  << " um mensageiro. " << alive << endl;
-                        if (messenger.getStatus())
+                        if (messenger.getStatus()) //caso o mensageiro sobreviva, o exército azul irá recebe-lo
                         {                            
                             newTimestamp = (*currentAction).timestamp + messenger.getTravelTime();
                             newAction = {newTimestamp, azul, recebeu, true, true, true};
                             structInsert(newAction, actionVec);
                         }
-                        newTimestamp = (*currentAction).timestamp + redArmy.getWaitTime();
+                        newTimestamp = (*currentAction).timestamp + redArmy.getWaitTime(); //insere no vetor o tempo que o vermelho aguarda uma resposta para reenviar um mensageiro
                         newAction = {newTimestamp, vermelho, enviou, true, true, true};
                         structInsert(newAction, actionVec);
                     }
@@ -121,7 +120,7 @@ int main()
                         end = newTime;
                     }
                 }
-                if ((*currentAction).army == azul)
+                if ((*currentAction).army == azul) //exercito azul enviando um mensageiro
                 {
                     if (blueArmy.getMessengerCount() > 0)
                     {
@@ -146,13 +145,13 @@ int main()
                             alive = "Durante o trajeto, o mensageiro morreu.";
                         }
                         cout << "O exército " << (*currentAction).army << " " << (*currentAction).type << " em " << newTime  << " um mensageiro. " << alive << endl;
-                        if (messenger.getStatus())
+                        if (messenger.getStatus()) //caso o mensageiro sobreviva, o exército vermelho irá recebe-lo
                         {
                             newTimestamp = (*currentAction).timestamp + messenger.getTravelTime();
                             newAction = {newTimestamp, vermelho, recebeu, messenger.getPossibleMessage(), true, true};
                             structInsert(newAction, actionVec);
                         }
-                        else
+                        else //caso o mensageiro morra, o exército azul irá reenvia-lo
                         {
                             newTimestamp = (*currentAction).timestamp + blueArmy.getWaitTime();
                             newAction = {newTimestamp, azul, enviou, true, true, true};
@@ -179,7 +178,7 @@ int main()
                     }
                 }
             }
-            if ((*currentAction).type == recebeu && (*currentAction).alive)
+            if ((*currentAction).type == recebeu && (*currentAction).alive) //o exercito recebendo um mensageiro vivo
             {
                 if ((*currentAction).army == vermelho)
                 {
@@ -255,7 +254,7 @@ int main()
     }
     
     cout << "O início da troca de mensagens foi em " << start << ". O fim da troca de mensagens foi em " << end << "." << endl;
-    for (int i = 29; i >= 0; i--)
+    for (int i = 29; i >= 0; i--) 
     {
         if (actionVec[i].valid)
         {
