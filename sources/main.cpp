@@ -4,172 +4,269 @@
 #include <iostream>
 using namespace std;
 #include <string>
+#include <ctime>
+#include <algorithm>
+
+struct action
+    {
+        int timestamp;
+        char *army;
+        char *type;
+        bool possibleTime = true;
+        bool alive = true;
+        bool valid = false; //campo valid serve para filtrar structs com lixo de memória no vetor
+    };
+
+void structInsert(action actionStruct, action *actionVec) 
+{
+    for (int i = 29; i >= 0; i--)
+    {
+        if (actionVec[i].valid)
+        {
+            if (actionStruct.timestamp < actionVec[i].timestamp)
+            {
+                actionVec[i+1] = actionVec[i];
+            }
+            else
+            {
+                actionVec[i+1] = actionStruct;
+                break;
+            }
+        }
+    }
+}
 
 int main()
 {
     srand(time(NULL));
-    Army redArmy;
-    redArmy.setColor(1);
+    Army redArmy; //instancia o exército vermelho
+    char vermelho[9] = "Vermelho";
+    redArmy.setColor(vermelho);
     redArmy.setMessengerCount(5);
     redArmy.setWaitTime(12601);
-    Army blueArmy;
-    blueArmy.setColor(2);
+    Army blueArmy; //instancia o exército azul
+    char azul[5] = "Azul";
+    blueArmy.setColor(azul);
     blueArmy.setMessengerCount(10);
     blueArmy.setWaitTime(4201);
-    struct action
-    {
-        int timestamp;
-        int army;
-        int type;
-        bool possibleTime = true;
-        bool valid = false;
-    };
-    action actionVec[5][5];
+    
+    action actionVec[30];
+    int actualTimestamp;
+    int newTimestamp;
+    action newAction;
+    action *currentAction;
 
-    //primeira ação
-    redArmy.sendMessenger();
-    Messenger redMessenger;
-    redMessenger.setColor(1);
-    redMessenger.setTravelTime();
-    redMessenger.castleCapture();
-    actionVec[0][0] = {0, 1, 1, true, true}; //segundo zero, exército vermelho, tipo enviar(1), valid = true
-    if (redMessenger.getStatus() == true)
-    {
-        actionVec[0][1] = {redMessenger.getTravelTime(), 2, 2, true, true}; //tempo = 0+tempo de viagem, exército azul, tipo receber(2)
-        actionVec[1][0] = {redArmy.getWaitTime(), 1, 1, true, true}; 
-    }
-    else 
-    {
-        actionVec[1][0] = {redArmy.getWaitTime(), 1, 1, true, true}; 
-    }
+    char enviou[7] = "enviou";
+    char recebeu[8] = "recebeu";
+    actionVec[0] = {0, vermelho, enviou, true, true, true}; //segundo zero, exército vermelho, enviou, valid = true
 
     bool endProgram = false;
-    while(endProgram != true)
+    int i = 0;
+    string start = "0";
+    string end = "0";
+    while (!endProgram)
     {
-        int j = 0;
-        bool nextLine = true;
-        while(nextLine) //roda cada linha da matriz
+        currentAction = &actionVec[i];
+        if ((*currentAction).valid) //confere se não é lixo de memória
         {
-            for (int i = 4; i > 0; i--) //roda coluna da matriz para encontrar o último termo válido
+            if ((*currentAction).type == enviou)
             {
-                if (actionVec[j][i].valid == true)
+                Messenger messenger;
+                if ((*currentAction).army == vermelho) //exercito vermelho enviando um mensageiro
                 {
-                    if (actionVec[j][i].army == 2 && actionVec[j][i].type == 2) //exercito azul recebe mensageiro e envia o próximo
+                    if(redArmy.getMessengerCount() > 0)
                     {
-                        if (blueArmy.getMessengerCount() > 0)
+                        redArmy.sendMessenger();
+                        messenger.setColor(vermelho); 
+                        messenger.setTravelTime();
+                        messenger.castleCapture();
+                        (*currentAction).alive = messenger.getStatus();
+                        time_t now = time(0) + (*currentAction).timestamp;
+                        char* dt = ctime(&now); //por padrão a função ctime adiciona um \n
+                        string newTime = dt; //retiraremos o \n passando dt para uma string e utilizando a função abaixo
+                        newTime.erase(remove(newTime.begin(), newTime.end(), '\n'), newTime.end());
+                        if (start == "0")
                         {
-                            blueArmy.sendMessenger();
-                            Messenger blueMessenger;
-                            blueMessenger.setColor(2);
-                            blueMessenger.setTravelTime();
-                            blueMessenger.setPossibleMessage();
-                            blueMessenger.castleCapture();
-                            actionVec[j][i+1] = {actionVec[j][i].timestamp, 2, 1, blueMessenger.getPossibleMessage(), true};
-                            if (blueMessenger.getStatus() == true)
-                            {
-                                actionVec[j][i+2] = {actionVec[j][i].timestamp + blueMessenger.getTravelTime(), 1, 2, blueMessenger.getPossibleMessage(), true};
-                            }
-                            else
-                            {
-                                actionVec[j][i+2] = {actionVec[j][i].timestamp + blueArmy.getWaitTime(), 2, 1, blueMessenger.getPossibleMessage(), true};
-                            }
+                            start = newTime;
+                        }
+                        string alive;
+                        if ((*currentAction).alive)
+                        {
+                            alive = "Durante o trajeto, o mensageiro sobreviveu.";
                         }
                         else 
                         {
-                            nextLine = false;
-                            cout << "acabou neguinho do azul" << endl;
+                            alive = "Durante o trajeto, o mensageiro morreu.";
                         }
-                    }
-                    if (actionVec[j][i].army == 1 && actionVec[j][i].type == 2) //exercito vermelho recebe mensageiro e dispara
-                    {
-                        if (actionVec[j][i].possibleTime == true)
-                        {
-                            redArmy.flareShot();
-                            nextLine = false;
-                            cout << "vai caraio" << endl;
+                        cout << "O exército " << (*currentAction).army << " " << (*currentAction).type << " em " << newTime  << " um mensageiro. " << alive << endl;
+                        if (messenger.getStatus()) //caso o mensageiro sobreviva, o exército azul irá recebe-lo
+                        {                            
+                            newTimestamp = (*currentAction).timestamp + messenger.getTravelTime();
+                            newAction = {newTimestamp, azul, recebeu, true, true, true};
+                            structInsert(newAction, actionVec);
                         }
+                        newTimestamp = (*currentAction).timestamp + redArmy.getWaitTime(); //insere no vetor o tempo que o vermelho aguarda uma resposta para reenviar um mensageiro
+                        newAction = {newTimestamp, vermelho, enviou, true, true, true};
+                        structInsert(newAction, actionVec);
                     }
-                    if (actionVec[j][i].army == 1 && actionVec[j][i].type == 1) //exercito vermelho reenvia mensageiro pois pode ter morrido
+                    else 
                     {
-                        if (redArmy.getMessengerCount() > 0)
+                        endProgram = true;
+                        cout << "O exército perdeu pois os mensageiros do exército Vermelho acabaram." << endl;
+                        time_t now = time(0) + (*currentAction).timestamp;
+                        char* dt = ctime(&now);
+                        string newTime = dt;
+                        newTime.erase(remove(newTime.begin(), newTime.end(), '\n'), newTime.end());
+                        end = newTime;
+                    }
+                }
+                if ((*currentAction).army == azul) //exercito azul enviando um mensageiro
+                {
+                    if (blueArmy.getMessengerCount() > 0)
+                    {
+                        blueArmy.sendMessenger();
+                        messenger.setColor(azul);
+                        messenger.setTravelTime();
+                        messenger.setPossibleMessage();
+                        messenger.castleCapture();
+                        (*currentAction).alive = messenger.getStatus();
+                        (*currentAction).possibleTime = messenger.getPossibleMessage();
+                        time_t now = time(0) + (*currentAction).timestamp;
+                        char* dt = ctime(&now);
+                        string newTime = dt;
+                        newTime.erase(remove(newTime.begin(), newTime.end(), '\n'), newTime.end());
+                        string alive;
+                        if ((*currentAction).alive)
                         {
-                            redArmy.sendMessenger();
-                            Messenger redMessenger;
-                            redMessenger.setColor(1);
-                            redMessenger.setTravelTime();
-                            redMessenger.castleCapture();
-                            if (redMessenger.getStatus() == true)
-                            {
-                                actionVec[j+1][0] = {actionVec[j][i].timestamp + redArmy.getWaitTime(), 1, 1, true, true};
-                                actionVec[j+1][1] = {actionVec[j+1][0].timestamp + redMessenger.getTravelTime(), 2, 2, true, true}; //tempo = 0+tempo de viagem, exército azul, tipo receber(2)
-                            }
-                            else 
-                            {
-                                if (redArmy.getMessengerCount() != 0)
-                                {
-                                    actionVec[j+1][0] = {actionVec[j][i].timestamp + redArmy.getWaitTime(), 1, 1, true, true}; 
-                                }
-                            }
+                            alive = "Durante o trajeto, o mensageiro sobreviveu.";
                         }
                         else 
                         {
-                            nextLine = false;
-                            cout << "acabou neguinho do vermelho" << endl;
+                            alive = "Durante o trajeto, o mensageiro morreu.";
+                        }
+                        cout << "O exército " << (*currentAction).army << " " << (*currentAction).type << " em " << newTime  << " um mensageiro. " << alive << endl;
+                        if (messenger.getStatus()) //caso o mensageiro sobreviva, o exército vermelho irá recebe-lo
+                        {
+                            newTimestamp = (*currentAction).timestamp + messenger.getTravelTime();
+                            newAction = {newTimestamp, vermelho, recebeu, messenger.getPossibleMessage(), true, true};
+                            structInsert(newAction, actionVec);
+                        }
+                        else //caso o mensageiro morra, o exército azul irá reenvia-lo
+                        {
+                            newTimestamp = (*currentAction).timestamp + blueArmy.getWaitTime();
+                            newAction = {newTimestamp, azul, enviou, true, true, true};
+                            structInsert(newAction, actionVec);
                         }
                     }
-                    if (actionVec[j][i].army == 2 && actionVec[j][i].type == 1) //exercito azul reenvia o mensageiro porque morreu
+                    else
                     {
-                        if (blueArmy.getMessengerCount() > 0)
+                        endProgram = true;
+                        cout << "O exército perdeu pois os mensageiros do exército Azul acabaram." << endl;
+                        time_t now = time(0) + (*currentAction).timestamp;
+                        char* dt = ctime(&now);
+                        string newTime = dt;
+                        newTime.erase(remove(newTime.begin(), newTime.end(), '\n'), newTime.end());
+                        end = newTime;
+                        for (int j = 29; j >= 0; j--) //exclui o horário que o vermelho enviaria o último mensageiro
                         {
-                            if (actionVec[j][i].timestamp < actionVec[j+1][0].timestamp)
+                            if (actionVec[j].army == vermelho && actionVec[j].type == enviou)
                             {
-                                blueArmy.sendMessenger();
-                                Messenger blueMessenger;
-                                blueMessenger.setColor(2);
-                                blueMessenger.setTravelTime();
-                                blueMessenger.setPossibleMessage();
-                                blueMessenger.castleCapture();
-                                if (blueMessenger.getStatus() == true)
-                                {
-                                    actionVec[j][i+1] = {actionVec[j][i].timestamp + blueMessenger.getTravelTime(), 1, 2, blueMessenger.getPossibleMessage(), true};
-                                }
-                                else
-                                {
-                                    if (blueArmy.getMessengerCount() != 0)
-                                    {
-                                        actionVec[j][i+1] = {actionVec[j][i].timestamp + blueArmy.getWaitTime(), 2, 1, blueMessenger.getPossibleMessage(), true};
-                                    }
-                                }
+                                actionVec[j].valid = false;
+                                break;
                             }
-                            else 
-                            {
-                                j++;
-                            }
-                        }
-                        else 
-                        {
-                            nextLine = false;
-                            cout << "acabou neguinho do azul" << endl;
                         }
                     }
-                    break;
-                } 
+                }
             }
-        }
-        
-        if (redArmy.getSuccess() == true || redArmy.getMessengerCount() == 0 || blueArmy.getMessengerCount() == 0)
-        {
-            endProgram = true;
-        }
-    }
-    for (int i = 0; i < 5; i++) 
-    {
-        for (int j = 0; j < 5; j++)
-        {
-            if (actionVec[i][j].valid) 
+            if ((*currentAction).type == recebeu && (*currentAction).alive) //o exercito recebendo um mensageiro vivo
             {
-                cout << "timestamp: " << actionVec[i][j].timestamp << ", exercito: " << actionVec[i][j].army << ", tipo: " << actionVec[i][j].type << endl;
+                if ((*currentAction).army == vermelho)
+                {
+                    time_t now = time(0) + (*currentAction).timestamp;
+                    char* dt = ctime(&now);
+                    string newTime = dt;
+                    newTime.erase(remove(newTime.begin(), newTime.end(), '\n'), newTime.end());
+                    string alive;
+                    if ((*currentAction).alive)
+                    {
+                        alive = "vivo.";
+                    }
+                    else 
+                    {
+                        alive = "morto.";
+                    }
+                    cout << "O exército " << (*currentAction).army << " " << (*currentAction).type << " em " << newTime << " um mensageiro " << alive << endl;
+                    if ((*currentAction).possibleTime)
+                    {
+                        redArmy.flareShot();
+                        endProgram = true;
+                        cout << "O exército Azul confirmou o horário e o exército Vermelho disparou o sinalizador. O exército ganhou." << endl;
+                        end = newTime;
+                        for (int j = 29; j >= 0; j--) //exclui o horário que o vermelho enviaria o último mensageiro
+                        {
+                            if (actionVec[j].army == vermelho && actionVec[j].type == enviou)
+                            {
+                                actionVec[j].valid = false;
+                                break;
+                            }
+                        }
+                    }
+                    else 
+                    {
+                        newTimestamp = (*currentAction).timestamp + 1;
+                        newAction = {newTimestamp, vermelho, enviou, true, true, true};
+                        structInsert(newAction, actionVec);
+                        cout << "O exército Vermelho disparou o sinalizador confirmando que recebeu o mensageiro." << endl;
+                        cout << "O exército Vermelho vai reenviar um mensageiro pois o Azul não podia no horário combinado." << endl;
+                        for (int j = 29; j >= 0; j--) //exclui o horário que o vermelho enviaria o último mensageiro
+                        {
+                            if (actionVec[j].army == vermelho && actionVec[j].type == enviou)
+                            {
+                                actionVec[j].valid = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if ((*currentAction).army == azul)
+                {   
+                    time_t now = time(0) + (*currentAction).timestamp;
+                    char* dt = ctime(&now);
+                    string newTime = dt;
+                    newTime.erase(remove(newTime.begin(), newTime.end(), '\n'), newTime.end());
+                    string alive;
+                    if ((*currentAction).alive)
+                    {
+                        alive = "vivo.";
+                    }
+                    else 
+                    {
+                        alive = "morto.";
+                    }
+                    cout << "O exército " << (*currentAction).army << " " << (*currentAction).type << " em " << newTime << " um mensageiro " << alive << endl;
+                    newTimestamp = (*currentAction).timestamp + 1;
+                    newAction = {newTimestamp, azul, enviou, true, true, true};
+                    structInsert(newAction, actionVec);
+                }
             }
         }
+        i++;
     }
+    
+    cout << "O início da troca de mensagens foi em " << start << ". O fim da troca de mensagens foi em " << end << "." << endl;
+    for (int i = 29; i >= 0; i--) 
+    {
+        if (actionVec[i].valid)
+        {
+            int hour = (actionVec[i].timestamp - actionVec[0].timestamp) / 3600;
+            int minutes = ((actionVec[i].timestamp - actionVec[0].timestamp) % 3600) / 60;
+            int seconds = (actionVec[i].timestamp - actionVec[0].timestamp) - (3600 * hour) - (60 * minutes);
+            cout << "O tempo total entre a troca de mensagens foi de " << hour << " horas, " << minutes << " minutos e " << seconds << " segundos." << endl;
+            break;
+        }
+    }
+    cout << "O exército Vermelho utilizou " << 5 - redArmy.getMessengerCount() << " mensageiros." << endl;
+    cout << "O exército Azul utilizou " << 10 - blueArmy.getMessengerCount() << " mensageiros." << endl;
+
+    return 0;
 }

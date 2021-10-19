@@ -2,7 +2,7 @@
 #include <iostream>
 using namespace std;
 
-void Army::setColor(int c)
+void Army::setColor(char *c)
 {
     color = c;
 }
@@ -18,7 +18,7 @@ void Army::setSuccess(bool s)
 {
     success = s;
 }
-int Army::getColor() const
+char *Army::getColor()
 {
     return color;
 }

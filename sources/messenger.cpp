@@ -3,13 +3,13 @@
 #include <iostream>
 using namespace std;
 
-void Messenger::setColor(int c)
+void Messenger::setColor(char *c)
 {
     color = c;
 }
 void Messenger::setStatus(bool s)
 {
-    status = s;
+    alive = s;
 }
 void Messenger::setTravelTime()
 {
@@ -19,13 +19,13 @@ void Messenger::setPossibleMessage()
 {
     possibleMessage = possibleTime();
 }
-int Messenger::getColor() const
+char *Messenger::getColor() 
 {
     return color;
 }
 bool Messenger::getStatus() const
 {
-    return status;
+    return alive;
 }
 int Messenger::getTravelTime() const
 {
@@ -39,6 +39,6 @@ void Messenger::castleCapture()
 {
     if (castleCaptureFunction())
     {
-        status = false;
+        alive = false;
     }
 }

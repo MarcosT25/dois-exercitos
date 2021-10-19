@@ -4,16 +4,16 @@
 class Army
 {
     private:
-        int color;
+        char *color;
         int messengerCount;
         int waitTime;
         bool success = false;
     public:
-        void setColor(int);
+        void setColor(char*);
         void setMessengerCount(int);
         void setWaitTime(int);
         void setSuccess(bool);
-        int getColor() const;
+        char *getColor();
         int getMessengerCount() const;
         int getWaitTime() const;
         bool getSuccess() const;
