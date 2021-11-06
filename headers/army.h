@@ -1,6 +1,8 @@
 #ifndef ARMY_H
 #define ARMY_H
 
+// define a classe
+
 class Army
 {
     private:
